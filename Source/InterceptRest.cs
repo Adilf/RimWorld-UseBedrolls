@@ -55,11 +55,18 @@ namespace UseBedrolls
 				if (!GenConstruct.CanPlaceBlueprintAt(invBed.GetInnerIfMinified().def, c, direction, map).Accepted)
 					return false;
 
-				for (CellRect.CellRectIterator iterator = GenAdj.OccupiedRect(c, direction, bed.def.size).GetIterator();
-						!iterator.Done(); iterator.MoveNext())
-					foreach (Thing t in iterator.Current.GetThingList(map))
-						if (!(t is Pawn) && GenConstruct.BlocksConstruction(bed, t))
-							return false;
+                if (c.IsForbidden(pawn))
+                    return false;
+
+                for (CellRect.CellRectIterator iterator = GenAdj.OccupiedRect(c, direction, bed.def.size).GetIterator();
+                        !iterator.Done(); iterator.MoveNext())
+                {
+                    foreach (Thing t in iterator.Current.GetThingList(map))
+                        if (!(t is Pawn) && GenConstruct.BlocksConstruction(bed, t))
+                            return false;
+                    if (!(map.zoneManager.ZoneAt(c) is null))
+                        return false;
+                }
 
 				return true;
 			};
@@ -118,7 +125,7 @@ namespace UseBedrolls
 		{
 			Predicate<Thing> validator = delegate (Thing t)
 			{
-				return t.GetInnerIfMinified() is Building_Bed b && b.def.building.bed_humanlike && sleepy_pawn.CanReserveAndReach(t, PathEndMode.ClosestTouch, Danger.None);
+				return t.GetInnerIfMinified() is Building_Bed b && b.def.building.bed_humanlike && !t.IsForbidden(sleepy_pawn) && sleepy_pawn.CanReserveAndReach(t, PathEndMode.ClosestTouch, Danger.None);
 			};
 			List<Thing> groundBeds = sleepy_pawn.Map.listerThings.ThingsInGroup(ThingRequestGroup.MinifiedThing).FindAll(t => validator(t));
 			if (groundBeds.NullOrEmpty())

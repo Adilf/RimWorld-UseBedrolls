@@ -27,6 +27,12 @@ namespace UseBedrolls
 			if (placedBeds.TryGetValue(pawn, out Building_Bed bed))
 			{
 				Log.Message(pawn + " has bed " + bed);
+                if (bed.IsForbidden(pawn))
+                {
+                    Log.Message("but it is outside allowed zone");
+                    return null;
+                }
+
 				if (pawn.CanReserve(bed))
 					return new Job(JobDefOf.TakeBedroll, bed);
 			}
